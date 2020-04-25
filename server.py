@@ -2,7 +2,7 @@ from flask import Flask
 from flask import render_template
 from flask import request
 
-from email.Parser import HeaderParser
+from email.parser import HeaderParser
 import time
 import dateutil.parser
 
@@ -84,7 +84,7 @@ def getHeaderVal(h, data, rex='\s*(.*?)\n\S+:\s'):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        mail_data = request.form['headers'].strip().encode('ascii', 'ignore')
+        mail_data = request.form['headers'].strip().encode('ascii', 'ignore').decode()
         r = {}
         n = HeaderParser().parsestr(mail_data)
         graph = []
@@ -100,15 +100,15 @@ def index():
                 line = received[i].split(';')
             else:
                 line = received[i].split('\r\n')
-            line = map(str.strip, line)
-            line = map(lambda x: x.replace('\r\n', ' '), line)
+            line = list(map(str.strip, line))
+            line = list(map(lambda x: x.replace('\r\n', ' '), line))
             try:
                 if ';' in received[i + 1]:
                     next_line = received[i + 1].split(';')
                 else:
                     next_line = received[i + 1].split('\r\n')
-                next_line = map(str.strip, next_line)
-                next_line = map(lambda x: x.replace('\r\n', ''), next_line)
+                next_line = list(map(str.strip, next_line))
+                next_line = list(map(lambda x: x.replace('\r\n', ''), next_line))
             except IndexError:
                 next_line = None
 
@@ -142,6 +142,7 @@ def index():
                         |\sid\s
                     )""", line[0], re.DOTALL | re.X)
 
+            # import ipdb; ipdb.set_trace()
             delay = (org_time - next_time).seconds
             if delay < 0:
                 delay = 0
@@ -153,9 +154,9 @@ def index():
                     'Timestmp': org_time,
                     'Time': ftime,
                     'Delay': delay,
-                    'Direction': map(
+                    'Direction': list(map(
                         lambda x: x.replace('\n', ' '),
-                        map(str.strip, data[0])
+                        list(map(str.strip, data[0])))
                     )
                 }
                 c -= 1
